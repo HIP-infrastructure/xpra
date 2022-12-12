@@ -163,7 +163,7 @@ class Authenticator(SysAuthenticator):
                 return False
 
             user_info = keycloak_openid.userinfo(access_token)
-            log("userinfo_info: %r", user_info)
+            log("user_info: %r", user_info)
             log("keycloak authentication succeeded: token is active")
 
             if not self.groups_claim and self.groups_claim is not None:
@@ -171,9 +171,7 @@ class Authenticator(SysAuthenticator):
                 log.error("Error: keycloak authentication failed as no auth_groups is specified")
                 return False
               else:
-                print(user_info) 
-                log.error(user_info)
-                log(user_info)
+                log(user_info['roles']['group'])
 
             return True
         except KeycloakError as e:

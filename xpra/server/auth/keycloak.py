@@ -15,6 +15,8 @@ KEYCLOAK_REALM_NAME = os.environ.get("XPRA_KEYCLOAK_REALM_NAME", "example_realm"
 KEYCLOAK_CLIENT_ID = os.environ.get("XPRA_KEYCLOAK_CLIENT_ID", "example_client")
 KEYCLOAK_CLIENT_SECRET_KEY = os.environ.get("XPRA_KEYCLOAK_CLIENT_SECRET_KEY", "secret")
 KEYCLOAK_REDIRECT_URI = os.environ.get("XPRA_KEYCLOAK_REDIRECT_URI", "http://localhost/login/")
+KEYCLOAK_GROUPS_CLAIM = os.environ.get("XPRA_KEYCLOAK_GROUPS_CLAIM", "")
+KEYCLOAK_AUTH_GROUPS = os.environ.get("XPRA_KEYCLOAK_AUTH_GROUPS", "")
 KEYCLOAK_SCOPE = os.environ.get("XPRA_KEYCLOAK_SCOPE", "openid")
 KEYCLOAK_GRANT_TYPE = os.environ.get("XPRA_KEYCLOAK_GRANT_TYPE", "authorization_code")
 
@@ -27,6 +29,8 @@ class Authenticator(SysAuthenticator):
         self.client_id = kwargs.pop("client_id", KEYCLOAK_CLIENT_ID)
         self.client_secret_key = kwargs.pop("client_secret_key", KEYCLOAK_CLIENT_SECRET_KEY)
         self.redirect_uri = kwargs.pop("redirect_uri", KEYCLOAK_REDIRECT_URI)
+        self.groups_claim = kwargs.pop("groups_claim", KEYCLOAK_GROUPS_CLAIM)
+        self.auth_groups = kwargs.pop("auth_groups", KEYCLOAK_AUTH_GROUPS)
         self.scope = kwargs.pop("scope", KEYCLOAK_SCOPE)
         self.grant_type = kwargs.pop("grant_type", KEYCLOAK_GRANT_TYPE)
 
@@ -161,6 +165,16 @@ class Authenticator(SysAuthenticator):
             user_info = keycloak_openid.userinfo(access_token)
             log("userinfo_info: %r", user_info)
             log("keycloak authentication succeeded: token is active")
+
+            if not self.groups_claim and self.groups_claim is not None:
+              if not self.auth_groups or self.auth_groups is not None:
+                log.error("Error: keycloak authentication failed as no auth_groups is specified")
+                return False
+              else:
+                print(user_info) 
+                log.error(user_info)
+                log(user_info)
+
             return True
         except KeycloakError as e:
             log.error("Error: keycloak authentication failed")

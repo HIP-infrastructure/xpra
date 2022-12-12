@@ -162,17 +162,19 @@ class Authenticator(SysAuthenticator):
                 log.error("Error: keycloak authentication failed as token state is invalid")
                 return False
 
+            log("keycloak: token is active")
+
             user_info = keycloak_openid.userinfo(access_token)
             log("user_info: %r", user_info)
-            log("keycloak authentication succeeded: token is active")
 
             if not self.groups_claim and self.groups_claim is not None:
               if not self.auth_groups or self.auth_groups is not None:
                 log.error("Error: keycloak authentication failed as no auth_groups is specified")
                 return False
               else:
-                log(user_info['roles']['group'])
+                log("groups_claim: %r", user_info['roles']['group'])
 
+            log("keycloak authentication succeeded")
             return True
         except KeycloakError as e:
             log.error("Error: keycloak authentication failed")

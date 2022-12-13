@@ -177,15 +177,16 @@ class Authenticator(SysAuthenticator):
                 log.error("Error: keycloak authentication failed as auth_groups is invalid")
                 return False
               else:
-                groups_claim = list(self.groups_claim.split('.'))
+                def get(dict, keys):
+                  return get(dict[keys.pop(0)], keys) if len(keys) else dict
+                groups_claim = get(user_info, group_claims.split('.'))
                 log("claims: %r", groups_claim)
                 if self.auth_condition == "or":
-                  if len({self.auth_groups}.intersection(set(user_info['roles']['group']))) == 0:
+                  if len({self.auth_groups}.intersection(set(groups_claim)) == 0:
                     log.error("Error: keycloak authentication failed as groups claim is not satisfied")
                     return False
                 elif self.auth_condition == "and": 
-                  if not {self.auth_groups}.issubset(set(user_info['roles']['group'])):
-                    log({self.auth_groups}.issubset(set(user_info['roles']['group'])))
+                  if not {self.auth_groups}.issubset(set(groups_claim)):
                     log.error("Error: keycloak authentication failed as groups claim is not satisfied")
                     return False
                 else:

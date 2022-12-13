@@ -171,12 +171,14 @@ class Authenticator(SysAuthenticator):
 
             log("groups_claim: %r", self.groups_claim)
             log("auth_groups: %r", {self.auth_groups})
-            log("groups_claim: %r", set(user_info['roles']['group']))
+            log("%r: %r", self.groups_claim, set(user_info['roles']['group']))
             if self.groups_claim is not None and self.groups_claim:
               if not self.auth_groups or self.auth_groups is None:
                 log.error("Error: keycloak authentication failed as auth_groups is invalid")
                 return False
               else:
+                groups_claim = list(self.groups_claim.split('.'))
+                log("claims: %r", groups_claim)
                 if self.auth_condition == "or":
                   if len({self.auth_groups}.intersection(set(user_info['roles']['group']))) == 0:
                     log.error("Error: keycloak authentication failed as groups claim is not satisfied")

@@ -17,6 +17,7 @@ KEYCLOAK_CLIENT_SECRET_KEY = os.environ.get("XPRA_KEYCLOAK_CLIENT_SECRET_KEY", "
 KEYCLOAK_REDIRECT_URI = os.environ.get("XPRA_KEYCLOAK_REDIRECT_URI", "http://localhost/login/")
 KEYCLOAK_GROUPS_CLAIM = os.environ.get("XPRA_KEYCLOAK_GROUPS_CLAIM", "")
 KEYCLOAK_AUTH_GROUPS = os.environ.get("XPRA_KEYCLOAK_AUTH_GROUPS", "")
+KEYCLOAK_AUTH_CONDITION = os.environ.get("XPRA_KEYCLOAK_AUTH_CONDITION", "and")
 KEYCLOAK_SCOPE = os.environ.get("XPRA_KEYCLOAK_SCOPE", "openid")
 KEYCLOAK_GRANT_TYPE = os.environ.get("XPRA_KEYCLOAK_GRANT_TYPE", "authorization_code")
 
@@ -31,6 +32,7 @@ class Authenticator(SysAuthenticator):
         self.redirect_uri = kwargs.pop("redirect_uri", KEYCLOAK_REDIRECT_URI)
         self.groups_claim = kwargs.pop("groups_claim", KEYCLOAK_GROUPS_CLAIM)
         self.auth_groups = kwargs.pop("auth_groups", KEYCLOAK_AUTH_GROUPS)
+        self.auth_condition = kwargs.pop("auth_condition", KEYCLOAK_AUTH_CONDITION)
         self.scope = kwargs.pop("scope", KEYCLOAK_SCOPE)
         self.grant_type = kwargs.pop("grant_type", KEYCLOAK_GRANT_TYPE)
 
@@ -170,13 +172,23 @@ class Authenticator(SysAuthenticator):
             log("groups_claim: %r", self.groups_claim)
             log("auth_groups: %r", self.auth_groups)
             log("groups_claim: %r", user_info['roles']['group'])
-            if not self.groups_claim and self.groups_claim is not None:
-              if not self.auth_groups or self.auth_groups is not None:
-                log.error("Error: keycloak authentication failed as no auth_groups is specified")
+            if self.groups_claim is not None and self.groups_claim:
+              if not self.auth_groups or self.auth_groups is None:
+                log.error("Error: keycloak authentication failed as auth_groups is invalid")
                 return False
               else:
-                log("groups_claim: %r", user_info['roles']['group'])
-
+                if self.auth_condition == "or":
+                  if len(set(self.auth_groups).intersection(set(user_info['roles']['group']))) == 0:
+                    log.error("Error: keycloak authentication failed as groups claim is not satisfied")
+                    return False
+                elif self.auth_condtion == "and": 
+                  if not set(self.auth_groups).issubset(set(user_info['roles']['group']))
+                    log.error("Error: keycloak authentication failed as groups claim is not satisfied")
+                    return False
+                else:
+                  log.error("Error: keycloak authentication failed as auth_condition is invalid")
+                  return False
+                
             log("keycloak authentication succeeded")
             return True
         except KeycloakError as e:

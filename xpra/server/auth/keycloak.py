@@ -179,7 +179,7 @@ class Authenticator(SysAuthenticator):
               else:
                 def get(dict, keys):
                   return get(dict[keys.pop(0)], keys) if len(keys) else dict
-                groups_claim = get(user_info, group_claims.split('.'))
+                groups_claim = get(user_info, self.groups_claims.split('.'))
                 log("claims: %r", groups_claim)
                 if self.auth_condition == "or":
                   if len({self.auth_groups}.intersection(set(groups_claim))) == 0:

@@ -170,7 +170,7 @@ class Authenticator(SysAuthenticator):
             log("user_info: %r", user_info)
 
             log("groups_claim: %r", self.groups_claim)
-            log("auth_groups: %r", {self.auth_groups})
+            log("auth_groups: %r", self.auth_groups)
             log("%r: %r", self.groups_claim, set(user_info['roles']['group']))
             if self.groups_claim is not None and self.groups_claim:
               if not self.auth_groups or self.auth_groups is None:

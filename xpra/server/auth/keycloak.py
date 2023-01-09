@@ -186,7 +186,7 @@ class Authenticator(SysAuthenticator):
                     log.error("Error: keycloak authentication failed as groups claim is not satisfied")
                     return False
                 elif self.auth_condition == "and": 
-                  if not self.auth_groups.issubset(set(groups_claim)):
+                  if not set(self.auth_groups).issubset(set(groups_claim)):
                     log.error("Error: keycloak authentication failed as groups claim is not satisfied")
                     return False
                 else:

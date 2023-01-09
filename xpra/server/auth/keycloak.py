@@ -31,7 +31,7 @@ class Authenticator(SysAuthenticator):
         self.client_secret_key = kwargs.pop("client_secret_key", KEYCLOAK_CLIENT_SECRET_KEY)
         self.redirect_uri = kwargs.pop("redirect_uri", KEYCLOAK_REDIRECT_URI)
         self.groups_claim = kwargs.pop("groups_claim", KEYCLOAK_GROUPS_CLAIM)
-        self.auth_groups = kwargs.pop("auth_groups", KEYCLOAK_AUTH_GROUPS)
+        self.auth_groups = {kwargs.pop("auth_groups", KEYCLOAK_AUTH_GROUPS).split()}
         self.auth_condition = kwargs.pop("auth_condition", KEYCLOAK_AUTH_CONDITION)
         self.scope = kwargs.pop("scope", KEYCLOAK_SCOPE)
         self.grant_type = kwargs.pop("grant_type", KEYCLOAK_GRANT_TYPE)

@@ -15,9 +15,9 @@ KEYCLOAK_REALM_NAME = os.environ.get("XPRA_KEYCLOAK_REALM_NAME", "example_realm"
 KEYCLOAK_CLIENT_ID = os.environ.get("XPRA_KEYCLOAK_CLIENT_ID", "example_client")
 KEYCLOAK_CLIENT_SECRET_KEY = os.environ.get("XPRA_KEYCLOAK_CLIENT_SECRET_KEY", "secret")
 KEYCLOAK_REDIRECT_URI = os.environ.get("XPRA_KEYCLOAK_REDIRECT_URI", "http://localhost/login/")
-KEYCLOAK_GROUPS_CLAIM = os.environ.get("XPRA_KEYCLOAK_GROUPS_CLAIM", "")
-KEYCLOAK_AUTH_GROUPS = os.environ.get("XPRA_KEYCLOAK_AUTH_GROUPS", "")
-KEYCLOAK_AUTH_CONDITION = os.environ.get("XPRA_KEYCLOAK_AUTH_CONDITION", "and")
+KEYCLOAK_CLAIM_FIELD = os.environ.get("XPRA_KEYCLOAK_CLAIM_FIELD", "") # field containing groups claim
+KEYCLOAK_AUTH_GROUPS = os.environ.get("XPRA_KEYCLOAK_AUTH_GROUPS", "") # authorized groups
+KEYCLOAK_AUTH_CONDITION = os.environ.get("XPRA_KEYCLOAK_AUTH_CONDITION", "and") # authorization condition
 KEYCLOAK_SCOPE = os.environ.get("XPRA_KEYCLOAK_SCOPE", "openid")
 KEYCLOAK_GRANT_TYPE = os.environ.get("XPRA_KEYCLOAK_GRANT_TYPE", "authorization_code")
 
@@ -30,7 +30,7 @@ class Authenticator(SysAuthenticator):
         self.client_id = kwargs.pop("client_id", KEYCLOAK_CLIENT_ID)
         self.client_secret_key = kwargs.pop("client_secret_key", KEYCLOAK_CLIENT_SECRET_KEY)
         self.redirect_uri = kwargs.pop("redirect_uri", KEYCLOAK_REDIRECT_URI)
-        self.groups_claim = kwargs.pop("groups_claim", KEYCLOAK_GROUPS_CLAIM)
+        self.claim_field = kwargs.pop("claim_field", KEYCLOAK_CLAIM_FIELD)
         self.auth_groups = kwargs.pop("auth_groups", KEYCLOAK_AUTH_GROUPS).split()
         self.auth_condition = kwargs.pop("auth_condition", KEYCLOAK_AUTH_CONDITION)
         self.scope = kwargs.pop("scope", KEYCLOAK_SCOPE)
@@ -169,17 +169,18 @@ class Authenticator(SysAuthenticator):
             user_info = keycloak_openid.userinfo(access_token)
             log("user_info: %r", user_info)
 
-            log("groups_claim: %r", self.groups_claim)
+            log("claim_field: %r", self.claim_field)
             log("auth_groups: %r", self.auth_groups)
-            if self.groups_claim is not None and self.groups_claim:
+            # if claim_field is defined, check that the auth_groups match the groups_claim condition
+            if self.claim_field is not None and self.claim_field:
               if not self.auth_groups or self.auth_groups is None:
                 log.error("Error: keycloak authentication failed as auth_groups is invalid")
                 return False
               else:
                 def get(dict, keys):
                   return get(dict[keys.pop(0)], keys) if len(keys) else dict
-                groups_claim = get(user_info, self.groups_claim.split('.'))
-                log("claims: %r", groups_claim)
+                groups_claim = get(user_info, self.claim_field.split('.'))
+                log("groups_claim: %r", groups_claim)
                 if self.auth_condition == "or":
                   if len(self.auth_groups.intersection(set(groups_claim))) == 0:
                     log.error("Error: keycloak authentication failed as groups claim is not satisfied")
